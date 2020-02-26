@@ -16,7 +16,7 @@ const {connect} = require('mongoose');
             console.log('Error in DB connection: ' + err)
         }
     });
-    return client.login('NjgxNzk0ODM4ODc4MDkzMzIw.XlVSig.W5uUqgxN_UvopAjZpP4g09jrOi0');
+    return client.login('NjgyMzIwNTI1NzgzMjAzODk1.XlbUlw.cAgoWkfqPAkVfoYI54HmExFkuco');
 })();
 
 const Items = require("./models/items.js");
