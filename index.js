@@ -16,20 +16,25 @@ const {connect} = require('mongoose');
             console.log('Error in DB connection: ' + err)
         }
     });
-    return client.login('NjgxNzk0ODM4ODc4MDkzMzIw.XlVSig.W5uUqgxN_UvopAjZpP4g09jrOi0');
+    return client.login('NjgxNzk0ODM4ODc4MDkzMzIw.Xlafog.7OrFQT-YdoVA8w1KM1ZzFwprGsA');
 })();
 
 const Items = require("./models/items.js");
 
 client.on("ready", () => console.info('Connecte avec le bot : '+ client.user.tag ));
+client.on("message", message => {
+    var mess = message.content.toLowerCase();
+    if(mess.includes("tom")) return message.reply('Quel enculé celui la ...');
+});
 client.on("message", async (message) => {
     if (!message.content.startsWith(prefix)) return;
     const args = message.content.slice(prefix.length).trim().split(/ +/g);
     const command = args.shift().toLowerCase();
     if(message.content === "!hi") return message.reply('Salut Nigga !');
+    else if(message.content.includes("fdp")) return message.reply('Attention à ton vocabulaire Voltaire !');
     else if(command.includes("add")){
         const items = new Items({
-            _id: message.id,
+            //_id: message.id,
             Proprietaire: message.author.username,
             Nom: args[0].toLowerCase(),
             Possession: null
@@ -45,32 +50,50 @@ client.on("message", async (message) => {
         var req = await Items.find({});
         req.forEach(item => {liste.push(item.Nom+" ===> "+ item.Proprietaire);});
         if(liste.length > 0){
-            message.channel.send("Liste des items : \n");
+            message.channel.send("Liste des items : \n Item ===> Propriétaire");
             return message.channel.send("```" + liste.join("\n") + "```");
         }
         else return message.channel.send("Banque Vide !");
     }
     else if(command.includes('take')) {
-        var search = await Items.findOne({ Nom: args[0].toLowerCase()});
-        //var req = await Items.findOneAndUpdate({Nom: args[0]}, {$set: {Possession: message.author.username}}, {new: true});
+        var query = { Nom: args[0].toLowerCase(), Possession: null };
+        var search = await Items.findOne(query);
         if(search.Possession != null) return message.reply("L'item est deja prit par : " + search.Possession+"");
         else {
-            var modify = await Items.updateOne({Nom: args[0].toLowerCase()}, {$set: {Possession: message.author.username}});
-            return message.reply("```"+message.author.username + " a prit l'item : " + args[0].toLowerCase()+"```");
+            var modify = await Items.updateOne(search, {$set: {Possession: message.author.username}});
+            return message.channel.send("```"+message.author.username + " a prit l'item : " + args[0].toLowerCase()+"```");
         }
+    }
+    else if(message.content === "!back all") {
+        var result = [];
+        var query = {Possession: message.author.username};
+        var search = await Items.find(query);
+        search.forEach(item => {
+            result.push(item.Nom.toLowerCase());
+        });
+        var modify = await Items.updateMany(query, {$set: {Possession: null}});
+        if(result.length > 0) return message.channel.send("```"+ message.author.username + " a rendu les items : \n" + result.join('\n') + "```" );
+        else return message.channel.send("``` Tu as aucuns items à rendre dude ! ```" );
     }
     else if(command.includes('back')) {
-        var search = await Items.findOne({ Nom: args[0].toLowerCase()});
-        if(search.Possession === message.author.username) {
-            var modify = await Items.updateOne({Nom: args[0].toLowerCase()}, {$set: {Possession: null}});
+        var query = { Nom: args[0].toLowerCase(), Possession: message.author.username};
+        var search = await Items.findOne(query);
+        if(search.Possession != message.author.username) return message.reply("Tu essaye de rendre un item que t'as pas. 7mar !");
+        else {
+            var modify = await Items.updateOne(query, {$set: {Possession: null}});
             return message.reply("```"+message.author.username + " a rendu l'item : " + args[0].toLowerCase()+"```");
         }
-        else return message.reply("Tu essaye de rendre un item que t'as pas. 7mar !");
     }
     else if(command.includes('item')) {
-        var req = await Items.findOne({ Nom: args[0].toLowerCase()});
-        if(req.Possession != null) return message.reply("```" + args[0].toLowerCase() + " est emprunté par : " + req.Possession + "```");
-        else return message.reply("```" + args[0].toLowerCase() + ' est dispo dans le coffre de la maison !```');
+        var liste = [];
+        var req = await Items.find({ Nom: args[0].toLowerCase()});
+        req.forEach(item => {
+            if(item.Possession != null) liste.push(item.Nom.toLowerCase() + " est emprunté par : " + item.Possession);
+            else liste.push(item.Nom.toLowerCase() + ' est dispo dans le coffre de la maison !');
+        });
+        return message.channel.send("```" + liste.join('\n') + "```" );
+        //if(req.Possession != null) message.reply("```" + args[0].toLowerCase() + " est emprunté par : " + req.Possession + "```");
+        //else message.reply("```" + args[0].toLowerCase() + ' est dispo dans le coffre de la maison !```');
     }
     else if(message.content === "!help")
     {

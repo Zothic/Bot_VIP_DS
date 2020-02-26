@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 
 const ItemsSchema = mongoose.Schema({
-    _id: String,
+    //_id: String,
     Nom: String,
     Proprietaire:String,
     Possession: {
